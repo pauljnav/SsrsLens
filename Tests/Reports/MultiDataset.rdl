@@ -1,0 +1,24 @@
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition">
+  <DataSources>
+    <DataSource Name="MainDb">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString>Data Source=localhost;Initial Catalog=Reports</ConnectString>
+      </ConnectionProperties>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="FirstQuery">
+      <Query>
+        <DataSourceName>MainDb</DataSourceName>
+        <CommandText>SELECT 1</CommandText>
+      </Query>
+    </DataSet>
+    <DataSet Name="SecondQuery">
+      <Query>
+        <DataSourceName>MainDb</DataSourceName>
+        <CommandText>SELECT 2</CommandText>
+      </Query>
+    </DataSet>
+  </DataSets>
+</Report>

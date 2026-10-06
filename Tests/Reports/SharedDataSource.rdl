@@ -1,0 +1,15 @@
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition">
+  <DataSources>
+    <DataSource Name="SharedDb">
+      <DataSourceReference>/Shared Data Sources/Reporting</DataSourceReference>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="SharedQuery">
+      <Query>
+        <DataSourceName>SharedDb</DataSourceName>
+        <CommandText>SELECT 1</CommandText>
+      </Query>
+    </DataSet>
+  </DataSets>
+</Report>

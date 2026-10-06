@@ -1,233 +1,185 @@
+---
+id: readme
+title: SSRSLens
+description: A PowerShell 7+ module for discovering, inspecting, and analyzing SQL Server Reporting Services.
+---
+
 # SSRSLens
 
-A PowerShell 7+ module for exploring and analyzing SQL Server Reporting Services (SSRS).
+A PowerShell 7+ module for discovering, inspecting, and analyzing SQL Server Reporting Services (SSRS).
 
-SSRSLens focuses on discovery, inventory, metadata inspection, and SQL extraction from SSRS reports using the SSRS REST API and report definitions (RDL).
+SSRSLens focuses on report inventory, dataset inspection, and SQL extraction using the SSRS REST API and RDL parsing. Dependency analysis is a future direction.
 
-The module is intentionally read-only and safe for production environments.
+The module is intentionally read-only.
 
 ---
 
 # Why SSRSLens?
 
-Most existing SSRS PowerShell tooling focuses on administration, deployment, and configuration.
+Most SSRS tooling focuses on deployment and administration.
 
-SSRSLens focuses on answering questions like:
+SSRSLens focuses on answering questions such as:
 
 - What reports exist?
-- Which reports use a specific database?
-- What SQL is executed by a report?
+- What SQL does a report execute?
 - Which stored procedures are used?
-- Which datasets exist in a report?
-- What data sources are referenced?
-- How are reports related to one another?
+- Which data sources are referenced?
+- Which reports use a particular database?
 
-Examples:
+---
+
+# Features
+
+## ReportServer connection
+
+```powershell
+Connect-SSRSLens -Server '<mySsrsServer>'
+```
+
+This updates `$env:SSRSServer` in the current session on all supported
+platforms. On Windows, it also saves the server identifier in the user-scoped
+environment variable for future sessions, until you change or remove it. On
+Linux and macOS, configure persistence in your shell environment separately.
+Data commands reuse the current process value; connection setup does not test
+server connectivity or authenticate. Use `-WhatIf` to preview the local
+environment-setting change without applying it.
+
+## Report Discovery
 
 ```powershell
 Get-Report
+```
 
+Discover reports within an SSRS instance using the REST API.
+
+---
+
+## Dataset Inspection
+
+```powershell
+Get-DataSet
+```
+
+Inspect report datasets, command types, and data source references.
+
+---
+
+## SQL Extraction
+
+```powershell
 Get-ReportSql
-
-Get-ReportSql -Path '/Finance'
-
-Get-Report |
-    Get-ReportSql
 ```
 
----
-
-# Design Goals
-
-## PowerShell 7 First
-
-SSRSLens targets modern PowerShell.
-
-Supported:
-
-```text
-PowerShell 7+
-```
-
-Not required:
-
-```text
-Windows PowerShell
-SOAP proxies
-New-WebServiceProxy
-```
+Extract SQL statements and stored procedure references from report definitions.
 
 ---
 
-## Read-Only
+# Design Principles
 
-SSRSLens does not modify SSRS.
-
-Examples of intentionally unsupported functionality:
-
-- Deploying reports
-- Creating reports
-- Modifying reports
-- Managing subscriptions
-- Managing security
-- Managing encryption keys
-- Managing report server configuration
-
----
-
-## REST API First
-
-SSRSLens prefers SSRS REST API v2.0 whenever possible.
-
-Report definitions are parsed directly when required to access metadata that is unavailable through REST endpoints.
-
----
-
-## Object-Oriented
-
-Commands return typed PowerShell objects.
-
-No screen scraping.
-
-No formatted text processing.
-
-No XML contracts exposed publicly.
+- Read-only by design
+- PowerShell 7 native
+- REST API first
+- Object-oriented output
+- Pipeline-friendly
+- Minimal dependencies
+- Safe read-only execution
 
 ---
 
 # Installation
 
-## From PSGallery
-
 ```powershell
-Install-Module SSRSLens
+Install-Module SSRSLens -Scope CurrentUser
 ```
 
-## Import Module
+---
+
+# Importing the Module
 
 ```powershell
 Import-Module SSRSLens
 ```
 
-## Optional Command Prefix
-
-Users can isolate commands by applying a module prefix:
+Optional prefixing:
 
 ```powershell
 Import-Module SSRSLens -Prefix Ssrs
 ```
 
-This automatically provides:
+Resulting commands:
 
 ```powershell
+Connect-SsrsSSRSLens
 Get-SsrsReport
+Get-SsrsDataSet
 Get-SsrsReportSql
 ```
 
-without requiring separate command implementations.
+without requiring additional implementations.
 
 ---
 
-# Command Surface (v0.1)
+# Examples
 
-## Get-Report
+Select the ReportServer once for this user and session:
 
-Discover SSRS reports.
+```powershell
+Connect-SSRSLens -Server '<mySsrsServer>'
+```
 
-### Examples
+The examples below assume this target is already selected. Data commands
+reuse `$env:SSRSServer`.
+
+## Discover Reports
 
 ```powershell
 Get-Report
 ```
 
+---
+
+## Discover Reports in a Folder
+
 ```powershell
 Get-Report -Path '/Finance'
 ```
+
+---
+
+## Discover Reports Recursively
 
 ```powershell
 Get-Report -Path '/Finance' -Recurse
 ```
 
-### Returns
-
-```text
-SSRSLens.Report
-```
-
 ---
 
-## Get-DataSet
-
-Retrieve dataset metadata from reports.
-
-### Examples
-
-```powershell
-Get-Report |
-    Get-DataSet
-```
-
-### Returns
-
-```text
-SSRSLens.DataSet
-```
-
----
-
-## Get-ReportSql
-
-Extract SQL and stored procedure calls from reports.
-
-### Examples
+## Extract SQL From All Reports
 
 ```powershell
 Get-ReportSql
 ```
 
+---
+
+## Extract SQL From a Folder
+
 ```powershell
 Get-ReportSql -Path '/Finance'
 ```
+
+---
+
+## Pipeline Usage
 
 ```powershell
 Get-Report |
     Get-ReportSql
 ```
 
-### Returns
-
-```text
-SSRSLens.ReportSql
-```
-
 ---
 
-# Public Object Types
-
-The following object types are considered part of the public API.
-
-```text
-SSRSLens.ReportFolder
-SSRSLens.Report
-SSRSLens.ReportDefinition
-SSRSLens.DataSet
-SSRSLens.DataSource
-SSRSLens.ReportSql
-```
-
----
-
-# Examples
-
-## Inventory Reports
-
-```powershell
-Get-Report -Path '/'
-```
-
----
-
-## Find Stored Procedures
+## Find Stored Procedure Usage
 
 ```powershell
 Get-ReportSql |
@@ -245,7 +197,7 @@ Get-ReportSql |
 
 ---
 
-## Group Reports By Data Source
+## Group Reports by Data Source
 
 ```powershell
 Get-ReportSql |
@@ -254,71 +206,80 @@ Get-ReportSql |
 
 ---
 
-# Architecture
+# Public Commands
 
-SSRSLens follows a simple pipeline:
+Version 0.1 intentionally focuses on a small command surface:
 
 ```text
-REST API
-    ↓
-Report Discovery
-    ↓
-Report Definition Retrieval
-    ↓
-RDL Parsing
-    ↓
-Object Creation
-```
-
-XML is treated as an implementation detail.
-
-Public commands return SSRSLens objects rather than XML documents.
-
----
-
-# Development Principles
-
-- Read-only by design
-- PowerShell 7 native
-- REST API first
-- Object-oriented output
-- Pipeline friendly
-- Minimal dependencies
-- Production-safe execution
-- Stable public object contracts
-
----
-
-# Roadmap
-
-## Version 0.1
-
-```powershell
+Connect-SSRSLens
 Get-Report
 Get-DataSet
 Get-ReportSql
 ```
 
-Primary focus:
+Future commands are documented in:
 
-- Report discovery
-- Dataset inspection
-- SQL extraction
+```text
+docs/roadmap.md
+```
 
 ---
 
-## Future Candidates
+# Public Object Types
 
-Potential future functionality includes:
+The v0.1 commands return these public object types:
 
-```powershell
-Get-DataSource
-Get-ReportDefinition
-Get-SharedDataSet
-Get-ReportDependency
+```text
+Lens.Report
+Lens.DataSet
+Lens.ReportSql
 ```
 
-Future releases may introduce lineage and dependency analysis capabilities while maintaining the module's read-only philosophy.
+Reserved type contracts for future public commands:
+
+```text
+Lens.ReportDefinition
+Lens.DataSource
+Lens.ReportFolder
+```
+
+Object definitions and contracts are documented in:
+
+```text
+docs/architecture.md
+```
+
+---
+
+# Documentation
+
+Architecture:
+
+```text
+docs/architecture.md
+```
+
+Contributor and agent guidance:
+
+```text
+copilot-instructions.md
+```
+
+Implementation roadmap:
+
+```text
+docs/roadmap.md
+```
+
+---
+
+# Project Philosophy
+
+SSRSLens exists to help users understand their reporting estate.
+
+It is intentionally focused on discovery and analysis rather than administration.
+
+If a feature does not help users discover, inspect, inventory, or analyze SSRS content, it probably belongs in a different module.
 
 ---
 
